@@ -57,13 +57,15 @@ def list_todos():
   return jsonify({
       "success": True,
       "message": "All todos fetched",
-      "payload": [
-          {
-              "text": todo.text,
-              "is_done": todo.is_done,
-              "is_starred": todo.is_starred,
-          } for todo in todos
-      ]
+      "payload": {
+          "todos": [
+              {
+                  "text": todo.text,
+                  "is_done": todo.is_done,
+                  "is_starred": todo.is_starred,
+              } for todo in todos
+          ]
+      }
   })
 
 

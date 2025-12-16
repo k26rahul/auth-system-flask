@@ -45,10 +45,14 @@
 
       <div id="auth-result">Not logged in</div>
 
-      <button>Fetch all todos</button>
+      <button onclick="fetchTodos()">Fetch all todos</button>
+
+      <ul id="todos"></ul>
     </main>
 
     <script>
+      const html = String.raw;
+
       let sessionId = localStorage.getItem('sessionId');
       let token = localStorage.getItem('token');
 
@@ -87,7 +91,21 @@
         document.querySelector('#auth-result').textContent = data.message;
       }
 
-      async function fetchTodos() {}
+      async function fetchTodos() {
+        const res = await fetch('http://127.0.0.1:5000/todo/list?session_id=1&token=a5nRTFj11j');
+        const data = await res.json();
+
+        if (data.success) {
+          console.log(data);
+          for (let todo of data.payload.todos) {
+            const todoHtml = html`<li>${todo.text}</li>`;
+            // document.querySelector('#todos').innerHTML += todoHtml;
+            document.querySelector('#todos').insertAdjacentHTML('beforeend', todoHtml);
+          }
+        } else {
+          console.error(data);
+        }
+      }
     </script>
   </body>
 </html>
