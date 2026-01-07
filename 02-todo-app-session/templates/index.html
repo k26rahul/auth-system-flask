@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Todo App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo app [session auth]</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/main.js" defer></script>
   </head>
-
   <body>
     <main>
       <section>
-        <!-- login accordion -->
         <details>
           <summary>Login</summary>
 
           <form id="login-form">
             <label>
               Email:
-              <input type="text" id="email" value="rahul@example.com" />
+              <input type="text" id="email" value="rahul@example.com">
             </label>
             <label>
               Password:
-              <input type="text" id="password" value="12345" />
+              <input type="text" id="password" value="12345">
             </label>
             <button>Login</button>
           </form>
@@ -34,14 +32,15 @@
       <section>
         <form id="todo-form">
           <label>
+            Todo:
             <input type="text" id="todo-text" value="say hello">
           </label>
           <button>Create</button>
         </form>
 
-        <button onclick="fetchTodos()">Fetch Todos</button>
+        <button id="fetch-all">Fetch all todos</button>
 
-        <ul id="todo-list">
+        <ul id="todos">
         </ul>
       </section>
     </main>

@@ -6,28 +6,24 @@ def populate_db():
   if User.query.count() > 0:
     return
 
-  user1 = User(
+  db.session.add(User(
       name="rahul",
       email="rahul@example.com",
       password=generate_password_hash("12345")
-  )
+  ))
 
-  user2 = User(
+  db.session.add(User(
       name="vidu",
       email="vidu@example.com",
       password=generate_password_hash("12345")
-  )
+  ))
 
-  db.session.add_all([user1, user2])
-  db.session.commit()
+  db.session.add_all([
+      Todo(text="this is todo 1", user_id=1, is_done=True),
+      Todo(text="this is todo 2", user_id=1, is_done=True),
+      Todo(text="this is todo 3", user_id=1, is_starred=True),
+      Todo(text="this is todo 4", user_id=1),
+      Todo(text="this is todo 5", user_id=1),
+  ])
 
-  todos = [
-      Todo(text="Learn Flask", user_id=user1.id, is_done=True),
-      Todo(text="Build ToDo App", user_id=user1.id, is_done=True),
-      Todo(text="Read API design", user_id=user1.id, is_starred=True),
-      Todo(text="Practice SQLAlchemy", user_id=user1.id),
-      Todo(text="Write clean code", user_id=user1.id),
-  ]
-
-  db.session.add_all(todos)
   db.session.commit()

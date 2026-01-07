@@ -1,78 +1,82 @@
-const html = String.raw;
+let html = String.raw;
+
+let authResult = document.querySelector('#auth-result');
+let todosUl = document.querySelector('#todos');
 
 let sessionId = localStorage.getItem('sessionId');
 let token = localStorage.getItem('token');
 
 if (sessionId && token) {
-  document.querySelector('#auth-result').textContent = 'Already logged in';
+  authResult.textContent = 'Already logged in';
 }
 
 document.querySelector('#login-form').addEventListener('submit', handleLogin);
-document.querySelector('#todo-form').addEventListener('submit', handleTodoCreate);
+document.querySelector('#todo-form').addEventListener('submit', handleCreateTodo);
+document.querySelector('#fetch-all').addEventListener('click', fetchAllTodos);
 
-function renderTodos(todos) {
-  const list = document.querySelector('#todo-list');
-  list.innerHTML = '';
-
-  todos.forEach(todo => {
-    list.insertAdjacentHTML(
-      'beforeend',
-      html`
-        <li>
-          <span class="${todo.isDone ? 'done' : ''}" onclick="markDone(${todo.id})">
-            ${todo.text}
-          </span>
-
-          <span class="star" onclick="markStarred(${todo.id})">
-            ${todo.isStarred ? '★' : '☆'}
-          </span>
-        </li>
-      `
-    );
-  });
-}
-
-async function api(method, endpoint, params = {}) {
-  const options = {
-    method: method,
+async function api(method, path, params) {
+  let options = {
+    method,
   };
 
-  let url;
+  let base = 'http://127.0.0.1:5000';
+  let url; // "<base><path-with-slash-at-start>?<query-str>"
 
   if (method == 'get') {
-    const query = new URLSearchParams({
+    let query = new URLSearchParams({
       ...params,
       sessionId,
       token,
-    }).toString();
+    });
 
-    url = `http://127.0.0.1:5000${endpoint}?${query}`;
+    url = `${base}${path}?${query}`;
   }
 
   if (method == 'post') {
-    options.headers = {
-      'Content-Type': 'application/json',
+    options = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
     };
-    options.body = JSON.stringify(params);
 
-    url = `http://127.0.0.1:5000${endpoint}`;
+    url = `${base}${path}`;
   }
 
-  const res = await fetch(url, options);
-  const data = await res.json();
+  let response = await fetch(url, options);
+  let data = await response.json();
 
   if (data.success) {
     console.log(data);
   } else {
     console.error(data);
   }
+
   return data;
+}
+
+function renderTodos(todos) {
+  todosUl.innerHTML = '';
+
+  todos.forEach(todo => {
+    todosUl.insertAdjacentHTML(
+      'beforeend',
+      html`
+        <li class="${todo.isDone ? 'done' : ''}">
+          <span onclick="deleteTodo(${todo.id})">×</span>
+          <span class="todo-item-text" onclick="markDone(${todo.id})">${todo.text}</span>
+          <span onclick="markStarred(${todo.id})">${todo.isStarred ? '★' : '☆'}</span>
+        </li>
+      `
+    );
+  });
 }
 
 async function handleLogin(e) {
   e.preventDefault();
 
-  const data = await api('post', '/auth/login', {
+  let data = await api('post', '/auth/login', {
     email: document.querySelector('#email').value,
     password: document.querySelector('#password').value,
   });
@@ -84,36 +88,42 @@ async function handleLogin(e) {
     localStorage.setItem('token', token);
   }
 
-  document.querySelector('#auth-result').textContent = data.message;
+  authResult.textContent = data.message;
 }
 
-async function handleTodoCreate(e) {
+async function handleCreateTodo(e) {
   e.preventDefault();
 
   await api('get', '/todo/create', {
     text: document.querySelector('#todo-text').value,
   });
-
-  fetchTodos();
+  fetchAllTodos();
 }
 
-async function fetchTodos() {
-  const data = await api('get', '/todo/list');
-  renderTodos(data.payload || []);
+async function fetchAllTodos() {
+  let data = await api('get', '/todo/list');
+  renderTodos(data.payload.todos);
 }
 
-async function markDone(id) {
+async function markDone(todoId) {
   await api('get', '/todo/update', {
-    todoId: id,
+    todoId,
     action: 'markDone',
   });
-  fetchTodos();
+  fetchAllTodos();
 }
 
-async function markStarred(id) {
+async function markStarred(todoId) {
   await api('get', '/todo/update', {
-    todoId: id,
+    todoId,
     action: 'markStarred',
   });
-  fetchTodos();
+  fetchAllTodos();
+}
+
+async function deleteTodo(todoId) {
+  await api('get', '/todo/delete', {
+    todoId,
+  });
+  fetchAllTodos();
 }
