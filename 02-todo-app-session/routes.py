@@ -101,3 +101,10 @@ def delete_todo(session):
   db.session.delete(todo)
   db.session.commit()
   return jsonify({"success": True, "message": "Todo deleted"})
+
+
+@routes.route("/eat/<int:qty>")
+@login_required
+def eat_fruits(session, qty):
+  user = User.query.filter_by(id=session.user_id).first()
+  return f"{user.name} eat {qty} fruits"
