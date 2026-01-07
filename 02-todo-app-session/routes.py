@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, render_template
 from models import db, User, Session, Todo
 from werkzeug.security import check_password_hash
 from utils import validate_session, generate_token
+from decorators import login_required
 
 routes = Blueprint("routes", __name__)
 
@@ -41,72 +42,62 @@ def login():
 
 
 @routes.route("/todo/list")
-def list_todos():
-  session = validate_session()
-  if session:
-    todos = Todo.query.filter_by(user_id=session.user_id).all()
-    return jsonify({
-        "success": True,
-        "message": "All todos fetched",
-        "payload": {
-            "todos": [{
-                "id": todo.id,
-                "text": todo.text,
-                "isDone": todo.is_done,
-                "isStarred": todo.is_starred,
-            } for todo in todos]
-        }
-    })
-  else:
-    return jsonify({"success": False, "message": "Unauthorized"}), 401
+@login_required
+def list_todos(session):
+  todos = Todo.query.filter_by(user_id=session.user_id).all()
+  return jsonify({
+      "success": True,
+      "message": "All todos fetched",
+      "payload": {
+          "todos": [{
+              "id": todo.id,
+              "text": todo.text,
+              "isDone": todo.is_done,
+              "isStarred": todo.is_starred,
+          } for todo in todos]
+      }
+  })
 
 
 @routes.route("/todo/create")
-def create_todo():
-  session = validate_session()
-  if session:
-    text = request.args.get("text")
+@login_required
+def create_todo(session):
+  text = request.args.get("text")
 
-    db.session.add(Todo(
-        text=text,
-        user_id=session.user_id
-    ))
-    db.session.commit()
+  db.session.add(Todo(
+      text=text,
+      user_id=session.user_id
+  ))
+  db.session.commit()
 
-    return jsonify({"success": True, "message": "Todo created"})
-  else:
-    return jsonify({"success": False, "message": "Unauthorized"}), 401
+  return jsonify({"success": True, "message": "Todo created"})
 
 
 @routes.route("/todo/update")
-def update_todo():
-  if validate_session():
-    todo_id = request.args.get("todoId")
-    action = request.args.get("action")
+@login_required
+def update_todo(session):
+  todo_id = request.args.get("todoId")
+  action = request.args.get("action")
 
-    todo = Todo.query.filter_by(id=todo_id).first()
+  todo = Todo.query.filter_by(id=todo_id).first()
 
-    if action == "markDone":
-      todo.is_done = not todo.is_done
+  if action == "markDone":
+    todo.is_done = not todo.is_done
 
-    elif action == "markStarred":
-      todo.is_starred = not todo.is_starred
+  elif action == "markStarred":
+    todo.is_starred = not todo.is_starred
 
-    db.session.commit()
-    return jsonify({"success": True, "message": "Todo updated"})
-  else:
-    return jsonify({"success": False, "message": "Unauthorized"}), 401
+  db.session.commit()
+  return jsonify({"success": True, "message": "Todo updated"})
 
 
 @routes.route("/todo/delete")
-def delete_todo():
-  if validate_session():
-    todo_id = request.args.get("todoId")
+@login_required
+def delete_todo(session):
+  todo_id = request.args.get("todoId")
 
-    todo = Todo.query.filter_by(id=todo_id).first()
+  todo = Todo.query.filter_by(id=todo_id).first()
 
-    db.session.delete(todo)
-    db.session.commit()
-    return jsonify({"success": True, "message": "Todo deleted"})
-  else:
-    return jsonify({"success": False, "message": "Unauthorized"}), 401
+  db.session.delete(todo)
+  db.session.commit()
+  return jsonify({"success": True, "message": "Todo deleted"})

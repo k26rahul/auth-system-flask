@@ -50,3 +50,10 @@ li.done .todo-item-text {
   text-decoration: line-through;
   opacity: 0.6;
 }
+
+button {
+  border: none;
+  padding: 0.25rem 1rem;
+  background-color: darkslateblue;
+  color: white;
+}
