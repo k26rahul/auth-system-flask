@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base64 Algorithm Visualizer</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="base64-logic.js" defer></script>
+    <script src="https://unpkg.com/vue@3.5.26/dist/vue.global.js" defer></script>
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+    <main id="app">
+      <h1>Base64 Visualizer</h1>
+      <p>Understanding how data becomes text.</p>
+
+      <div class="controls">
+        <div class="radio-group">
+          <label>
+            <input type="radio" value="text" v-model="inputMode" @change="resetAndProcess" /> Text
+            Processing
+          </label>
+          <label>
+            <input type="radio" value="file" v-model="inputMode" @change="resetAndProcess" /> File
+            Processing
+          </label>
+        </div>
+
+        <div class="input-group">
+          <div v-if="inputMode === 'text'">
+            <label>Enter Text:</label>
+            <input
+              type="text"
+              v-model="textInput"
+              @input="handleTextInput"
+              placeholder="Type something..."
+            />
+          </div>
+
+          <div v-if="inputMode === 'file'">
+            <label>Upload File:</label>
+            <input type="file" @change="handleFileUpload" />
+          </div>
+        </div>
+
+        <div>
+          <button @click="toggleCollapse">Toggle Collapse All</button>
+        </div>
+      </div>
+
+      <div v-if="rawBytes">
+        <h2>1. Input Data Visualization</h2>
+
+        <data-pills
+          title="Decimals (0-255)"
+          summary="Uint8Array Representation"
+          :data="encDecimals"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Hexadecimals"
+          summary="Base 16 representation"
+          :data="encHex"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Binary (Bytes)"
+          summary="8-bit chunks"
+          :data="encBinary8"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <h2>2. Base64 Encoding Process</h2>
+
+        <data-pills
+          title="Step 1: 6-bit Chunks"
+          summary="Split entire binary sequence into groups of 6 bits"
+          :data="encBinaryChunks6"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Step 2: Map to Integers"
+          summary="Convert 6-bit binary to decimal (0-63)"
+          :data="encInts6"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Step 3: Map to Base64 Symbols"
+          summary="Map integers to A-Z, a-z, 0-9, +, /"
+          :data="encSymbols"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <div class="result-box">
+          <strong>Final Encoded String:</strong>
+          <input type="text" readonly :value="encFinalString" />
+          <button @click="copyToClipboard">Copy</button>
+        </div>
+
+        <div :class="['verification', encMatched ? 'match' : 'mismatch']">
+          <div><strong>Verification (btoa):</strong> {{ encBrowserResult }}</div>
+          <div v-if="encMatched">✅ Results Match</div>
+          <div v-else>❌ Mismatch</div>
+        </div>
+
+        <h2>3. Base64 Decoding Process</h2>
+
+        <data-pills
+          title="Step 1: Map Symbols to Integers"
+          summary="Convert characters back to 0-63 range"
+          :data="decInts6"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Step 2: Integers to Binary"
+          summary="Convert to 6-bit binary chunks"
+          :data="decBinaryChunks6"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Step 3 & 4: Regroup to 8-bits"
+          summary="Join all bits, then split into standard Bytes"
+          :data="decBinaryChunks8"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <data-pills
+          title="Step 5: Map to Decimals"
+          summary="Convert 8-bit binary to 0-255"
+          :data="decInts8"
+          :collapsed="areAccordionsCollapsed"
+        >
+        </data-pills>
+
+        <div class="final-output">
+          <h3>Final Decoded Output:</h3>
+          <p v-if="inputMode === 'text'"><strong>String:</strong> {{ decResultText }}</p>
+          <div v-else>
+            <a
+              v-if="decResultBlobUrl"
+              :href="decResultBlobUrl"
+              :download="fileInputName || 'download'"
+              >Download Decoded File</a
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
