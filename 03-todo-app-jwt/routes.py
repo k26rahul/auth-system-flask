@@ -1,10 +1,9 @@
-import base64
-import json
 from flask import Blueprint, request, jsonify, render_template
 from models import db, User, Session, Todo
 from werkzeug.security import check_password_hash
 from utils import generate_token
 from decorators import login_required
+from jwt import jwt_encode
 
 routes = Blueprint("routes", __name__)
 
@@ -50,8 +49,8 @@ def login():
         "token": session.token,
     }
 
-    jwt = base64.urlsafe_b64encode(bytes(json.dumps(payload), encoding='utf-8')).decode()
-    response.set_cookie('session', jwt, httponly=True)
+    jwt_token = jwt_encode(payload)
+    response.set_cookie('jwt_token', jwt_token, httponly=True)
 
     return response
   else:
